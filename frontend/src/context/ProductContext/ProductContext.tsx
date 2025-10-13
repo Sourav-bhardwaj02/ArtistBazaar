@@ -1,6 +1,5 @@
 // src/context/ProductContext.tsx
 import { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { apiService } from "@/api/api";
 
 interface ApiProduct {
   _id: string;
@@ -8,21 +7,10 @@ interface ApiProduct {
   description: string;
   category: string;
   price: number;
-  // Primary field used by the UI
   images?: string[];
-  // Possible backend variants we'll normalize from
-  image?: string;
-  imagesData?: Array<{ url?: string; publicId?: string }>;
   tags?: string[];
   artisan?: string;
   location?: string;
-}
-
-interface ProductListResponse {
-  items: any[];
-  total: number;
-  page: number;
-  pages: number;
 }
 
 interface ProductContextType {
@@ -233,31 +221,43 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const fetchProducts = async (p = 1) => {
     setLoading(true);
     try {
-      const data = (await apiService.getProducts({
-        page: p.toString(),
-        limit: "24",
-        ...(q && { q }),
-        ...(category && { category }),
-        ...(tags.length > 0 && { tags: tags.join(",") }),
-        ...(minPrice && { minPrice }),
-        ...(maxPrice && { maxPrice }),
-      })) as ProductListResponse;
-      
-      // Normalize image fields so UI always gets images: string[]
-      const normalizedItems: ApiProduct[] = (data.items || []).map((item: any) => {
-        const imgs: string[] = Array.isArray(item?.images) && item.images.length
-          ? item.images
-          : Array.isArray(item?.imagesData) && item.imagesData.length
-            ? item.imagesData.map((x: any) => x?.url).filter(Boolean)
-            : item?.image
-              ? [item.image]
-              : [];
-        return { ...item, images: imgs } as ApiProduct;
-      });
-
-      setProducts(normalizedItems);
-      setPage(data.page || p);
-      setPages(data.pages || 1);
+      let filteredProducts = initialProducts;
+      if (q) {
+        filteredProducts = filteredProducts.filter(
+          (product) =>
+            product.name.toLowerCase().includes(q.toLowerCase()) ||
+            product.description.toLowerCase().includes(q.toLowerCase())
+        );
+      }
+      if (category) {
+        filteredProducts = filteredProducts.filter(
+          (product) => product.category === category
+        );
+      }
+      if (tags.length) {
+        filteredProducts = filteredProducts.filter((product) =>
+          tags.every((tag) => product.tags?.includes(tag))
+        );
+      }
+      if (minPrice) {
+        filteredProducts = filteredProducts.filter(
+          (product) => product.price >= parseFloat(minPrice)
+        );
+      }
+      if (maxPrice) {
+        filteredProducts = filteredProducts.filter(
+          (product) => product.price <= parseFloat(maxPrice)
+        );
+      }
+      const itemsPerPage = 24;
+      const startIndex = (p - 1) * itemsPerPage;
+      const paginatedProducts = filteredProducts.slice(
+        startIndex,
+        startIndex + itemsPerPage
+      );
+      setProducts(paginatedProducts);
+      setPage(p);
+      setPages(Math.ceil(filteredProducts.length / itemsPerPage));
     } catch (error) {
       console.error("Error fetching products:", error);
       setProducts([]);

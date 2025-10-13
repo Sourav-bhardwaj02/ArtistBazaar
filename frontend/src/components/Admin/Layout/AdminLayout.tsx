@@ -81,15 +81,6 @@ export function AdminLayout() {
                         Home
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-              <Link
-                to={ `/admin/` } // ✅ redirect correctly
-                className="flex items-center w-full"
-              >
-                <User className="w-4 h-4 mr-2" />
-                Profile
-              </Link>
-            </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <button onClick={handleLogout} className="flex items-center w-full">

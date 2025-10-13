@@ -1,16 +1,41 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, ShoppingCart, DollarSign, TrendingUp, Activity, Shield, FileText, Database } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/auth/AuthContext";
-import { apiService } from "@/api/api";
 
-interface AdminStats {
-  totalSellers: number;
-  totalServices: number;
-  totalProducts: number;
-  totalCustomers: number;
-}
+const stats = [
+  {
+    title: "Total Users",
+    value: "12,543",
+    change: "+12%",
+    changeType: "positive" as const,
+    icon: Users,
+    description: "Active users this month",
+  },
+  {
+    title: "Total Orders",
+    value: "8,721",
+    change: "+8%",
+    changeType: "positive" as const,
+    icon: ShoppingCart,
+    description: "Orders completed",
+  },
+  {
+    title: "Revenue",
+    value: "$54,234",
+    change: "+23%",
+    changeType: "positive" as const,
+    icon: DollarSign,
+    description: "Monthly revenue",
+  },
+  {
+    title: "Growth Rate",
+    value: "23.5%",
+    change: "+2.3%",
+    changeType: "positive" as const,
+    icon: TrendingUp,
+    description: "Compared to last month",
+  },
+];
 
 const recentActivity = [
   { action: "New user registered", user: "john@example.com", time: "5 min ago", type: "user" },
@@ -27,83 +52,21 @@ const systemStatus = [
 ];
 
 export default function Overview() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<AdminStats>({
-    totalSellers: 0,
-    totalServices: 0,
-    totalProducts: 0,
-    totalCustomers: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        setLoading(true);
-        const overviewData = await apiService.getAdminOverview();
-        setStats(overviewData);
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchAdminData();
-    }
-  }, [user]);
-
-  const statsData = [
-    {
-      title: "Total Sellers",
-      value: (stats.totalSellers || 0).toString(),
-      change: "+12%",
-      changeType: "positive" as const,
-      icon: Users,
-      description: "Active sellers on platform",
-    },
-    {
-      title: "Total Services",
-      value: (stats.totalServices || 0).toString(),
-      change: "+8%",
-      changeType: "positive" as const,
-      icon: ShoppingCart,
-      description: "Service providers",
-    },
-    {
-      title: "Total Products",
-      value: (stats.totalProducts || 0).toString(),
-      change: "+23%",
-      changeType: "positive" as const,
-      icon: DollarSign,
-      description: "Products listed",
-    },
-    {
-      title: "Total Customers",
-      value: (stats.totalCustomers || 0).toString(),
-      change: "+2.3%",
-      changeType: "positive" as const,
-      icon: TrendingUp,
-      description: "Registered customers",
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Welcome back, {user?.name}!
+          Admin Dashboard
         </h1>
         <p className="text-muted-foreground mt-2">
-          Here's what's happening with your platform today.
+          Welcome back! Here's what's happening with your platform today.
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsData.map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.title} className="shadow-card hover:shadow-elegant transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

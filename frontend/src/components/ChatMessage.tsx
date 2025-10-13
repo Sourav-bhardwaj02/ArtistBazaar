@@ -8,24 +8,16 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, isBot, timestamp }: ChatMessageProps) {
   return (
-    <div
-      className={cn(
-        "flex gap-3 p-4 rounded-lg max-w-[85%]",
-        isBot
-          ? "bg-muted text-foreground self-start"
-          : "bg-primary text-primary-foreground self-end ml-auto"
-      )}
-      role="group"
-      aria-label={isBot ? "Received message" : "Sent message"}
-    >
-      <div
-        className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0",
-          isBot
-            ? "bg-gradient-primary text-primary-foreground"
-            : "bg-primary-foreground/20 text-primary-foreground"
-        )}
-      >
+    <div className={cn(
+      "flex gap-3 p-4 rounded-lg",
+      isBot ? "bg-card" : "bg-primary/10 ml-8"
+    )}>
+      <div className={cn(
+        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+        isBot 
+          ? "bg-gradient-primary text-primary-foreground" 
+          : "bg-secondary text-secondary-foreground"
+      )}>
         {isBot ? "🤖" : "👤"}
       </div>
       <div className="flex-1">
@@ -33,11 +25,11 @@ export function ChatMessage({ message, isBot, timestamp }: ChatMessageProps) {
           <span className="font-medium text-sm">
             {isBot ? "Artisan Assistant" : "You"}
           </span>
-          <span className={cn("text-xs", isBot ? "text-muted-foreground" : "text-primary-foreground/90")}>
+          <span className="text-xs text-muted-foreground">
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
-        <p className={cn(isBot ? "text-foreground" : "text-primary-foreground")}>{message}</p>
+        <p className="text-foreground">{message}</p>
       </div>
     </div>
   );

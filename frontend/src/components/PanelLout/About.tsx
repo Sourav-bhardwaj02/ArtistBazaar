@@ -1,176 +1,178 @@
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Phone, Mail, Globe, Edit } from 'lucide-react';
-import { apiService } from '@/api/api';
-import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Globe, 
+  Star, 
+  Award,
+  Calendar,
+  Users,
+  Edit,
+  Camera
+} from 'lucide-react';
+
+const businessStats = [
+  { label: 'Years in Business', value: '5+', icon: Calendar },
+  { label: 'Happy Customers', value: '1,200+', icon: Users },
+  { label: 'Services Delivered', value: '5,000+', icon: Award },
+  { label: 'Average Rating', value: '4.9', icon: Star },
+];
+
+const achievements = [
+  { title: 'Top Seller 2024', description: 'Awarded for exceptional service quality', date: 'March 2024' },
+  { title: '99% Delivery Success', description: 'Maintained perfect delivery record', date: 'February 2024' },
+  { title: 'Customer Choice Award', description: 'Recognized by customer reviews', date: 'January 2024' },
+];
 
 export default function AboutCustom() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [edit, setEdit] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [form, setForm] = useState({
-    name: '',
-    bio: '',
-    location: '',
-    phone: '',
-    website: '',
-  });
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await apiService.getProfile();
-        const u = (res as any);
-        const user = u?.user || u; // support both shapes
-        setProfile(user);
-        setForm({
-          name: user?.name || '',
-          bio: user?.bio || '',
-          location: user?.location || '',
-          phone: user?.phone || '',
-          website: user?.website || '',
-        });
-      } catch (e: any) {
-        toast({ title: 'Failed to load profile', description: e.message || 'Please try again', variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const save = async () => {
-    try {
-      setLoading(true);
-      await apiService.updateProfile({
-        name: form.name,
-        bio: form.bio,
-        location: form.location,
-        phone: form.phone,
-        website: form.website,
-      });
-      toast({ title: 'Profile updated' });
-      setEdit(false);
-      // refresh
-      const res = await apiService.getProfile();
-      const u = (res as any);
-      setProfile(u?.user || u);
-    } catch (e: any) {
-      toast({ title: 'Failed to update', description: e.message || 'Please try again', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="flex-1 space-y-6 p-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">About</h1>
-          <p className="text-muted-foreground">View and edit your profile information</p>
+          <h1 className="text-3xl font-bold tracking-tight">About Us</h1>
+          <p className="text-muted-foreground">Manage your business profile and information</p>
         </div>
-        <Button className="bg-gradient-primary hover:opacity-90" onClick={() => setEdit((e) => !e)}>
+        <Button className="bg-gradient-primary hover:opacity-90">
           <Edit className="h-4 w-4 mr-2" />
-          {edit ? 'Cancel Edit' : 'Edit Profile'}
+          Edit Profile
         </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Profile */}
+        {/* Profile Section */}
         <Card className="md:col-span-2">
           <CardHeader>
             <div className="flex items-start gap-4">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src={profile?.avatar || '/placeholder-avatar.jpg'} alt="Avatar" />
-                <AvatarFallback className="text-lg bg-gradient-primary text-primary-foreground">
-                  {profile?.name ? profile.name.slice(0,2).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src="/placeholder-avatar.jpg" alt="Business Avatar" />
+                  <AvatarFallback className="text-lg bg-gradient-primary text-primary-foreground">
+                    JS
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 p-0 rounded-full"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="flex-1">
-                {edit ? (
-                  <div className="grid gap-3">
-                    <div>
-                      <Label>Name</Label>
-                      <Input value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
-                    </div>
-                    <div>
-                      <Label>Bio</Label>
-                      <Textarea value={form.bio} onChange={(e) => setForm(f => ({ ...f, bio: e.target.value }))} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <CardTitle className="text-2xl">{profile?.name || 'Your Name'}</CardTitle>
-                    <CardDescription className="text-base">{profile?.bio || 'Add a short bio about yourself'}</CardDescription>
-                  </>
-                )}
+                <CardTitle className="text-2xl">John's Premium Services</CardTitle>
+                <CardDescription className="text-base">
+                  Your trusted partner for fast and reliable delivery solutions
+                </CardDescription>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="secondary">Premium Seller</Badge>
+                  <Badge variant="outline">Verified Business</Badge>
+                </div>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Business Description */}
             <div>
-              <h3 className="font-semibold mb-3">Contact Information</h3>
-              {edit ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <Label>Location</Label>
-                    <Input value={form.location} onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>Phone</Label>
-                    <Input value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <Input value={profile?.email || ''} disabled />
-                  </div>
-                  <div>
-                    <Label>Website</Label>
-                    <Input value={form.website} onChange={(e) => setForm(f => ({ ...f, website: e.target.value }))} />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-center gap-3"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{profile?.location || '—'}</span></div>
-                  <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{profile?.phone || '—'}</span></div>
-                  <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{profile?.email || '—'}</span></div>
-                  <div className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{profile?.website || '—'}</span></div>
-                </div>
-              )}
+              <h3 className="font-semibold mb-2">About Our Business</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                We are a premium delivery service provider with over 5 years of experience in the industry. 
+                Our commitment to excellence and customer satisfaction has made us one of the most trusted 
+                names in logistics and delivery services. We pride ourselves on timely deliveries, 
+                professional service, and going the extra mile for our customers.
+              </p>
             </div>
 
-            {edit && (
-              <div className="flex justify-end">
-                <Button onClick={save} disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>
+            {/* Contact Information */}
+            <div>
+              <h3 className="font-semibold mb-3">Contact Information</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">123 Business St, City, State 12345</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">+1 (555) 123-4567</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">john@premiumservices.com</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">www.premiumservices.com</span>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Operating Hours */}
+            <div>
+              <h3 className="font-semibold mb-3">Operating Hours</h3>
+              <div className="grid gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Monday - Friday</span>
+                  <span>8:00 AM - 8:00 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Saturday</span>
+                  <span>9:00 AM - 6:00 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sunday</span>
+                  <span>10:00 AM - 4:00 PM</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Badges / Quick info */}
+        {/* Stats & Achievements */}
         <div className="space-y-6">
+          {/* Business Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>Basic account details</CardDescription>
+              <CardTitle>Business Stats</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Role</Badge>
-                <span className="text-sm">{profile?.role || '—'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">Member Since</Badge>
-                <span className="text-sm">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—'}</span>
-              </div>
+            <CardContent className="space-y-4">
+              {businessStats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-card rounded-lg flex items-center justify-center">
+                    <stat.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">{stat.value}</div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Recent Achievements */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Achievements</CardTitle>
+              <CardDescription>Recognition and milestones</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {achievements.map((achievement, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Award className="h-4 w-4 text-primary mt-1" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">{achievement.title}</h4>
+                      <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{achievement.date}</p>
+                    </div>
+                  </div>
+                  {index < achievements.length - 1 && <div className="border-b border-border" />}
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>

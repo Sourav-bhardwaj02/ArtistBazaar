@@ -201,14 +201,14 @@ export function ChatInterface() {
           <Phone className="w-4 h-4 mr-2" />
           Voice Call
         </Button>
-        {/* <Button
+        <Button
           variant={activeView === "settings" ? "default" : "outline"}
           onClick={() => handleViewChange("settings")}
           className="bg-gradient-primary"
         >
           <Settings className="w-4 h-4 mr-2" />
           n8n Settings
-        </Button> */}
+        </Button>
       </div>
 
       {/* Content based on current view */}
@@ -267,14 +267,14 @@ export function ChatInterface() {
         <VoiceCall onClose={() => handleViewChange("chat")} />
       )}
 
-      {/* {activeView === "settings" && (
+      {activeView === "settings" && (
         <N8nIntegration
           webhookUrl={n8nWebhookUrl}
           setWebhookUrl={setN8nWebhookUrl}
           isEnabled={n8nEnabled}
           setIsEnabled={setN8nEnabled}
         />
-      )} */}
+      )}
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiService } from '@/api/api';
 
 interface CartItem {
   productId: string;
@@ -22,8 +21,6 @@ interface CartContextType {
   getCartItemCount: () => number;
   getCartTotal: () => number;
   isLoading: boolean;
-  error: string | null;
-  refreshCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -43,9 +40,8 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL as string;
+  const API_URL = import.meta.env.VITE_URL as string;
 
   // Load cart from backend on mount
   useEffect(() => {
@@ -54,27 +50,22 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const loadCart = async () => {
     const token = localStorage.getItem('auth-token');
-    if (!token) {
-      setCart([]);
-      return;
-    }
+    if (!token) return;
 
     try {
       setIsLoading(true);
-      setError(null);
-      const data = await apiService.getCart();
-      setCart(data.items || []);
-    } catch (error: any) {
+      const response = await fetch(`${API_URL}/api/cart`, {
+        headers: { 'auth-token': token }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCart(data.items || []);
+      }
+    } catch (error) {
       console.error('Failed to load cart:', error);
-      setError(error.message || 'Failed to load cart');
-      setCart([]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const refreshCart = async () => {
-    await loadCart();
   };
 
   const addToCart = async (productId: string, quantity: number = 1) => {
@@ -85,12 +76,23 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     try {
       setIsLoading(true);
-      setError(null);
-      const data = await apiService.addToCart(productId, quantity);
-      setCart(data.cart.items || []);
-    } catch (error: any) {
+      const response = await fetch(`${API_URL}/api/cart/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'auth-token': token
+        },
+        body: JSON.stringify({ productId, quantity })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCart(data.cart.items || []);
+      } else {
+        throw new Error(data.message || 'Failed to add to cart');
+      }
+    } catch (error) {
       console.error('Failed to add to cart:', error);
-      setError(error.message || 'Failed to add item to cart');
       throw error;
     } finally {
       setIsLoading(false);
@@ -105,12 +107,23 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     try {
       setIsLoading(true);
-      setError(null);
-      const data = await apiService.updateCartItem(productId, quantity);
-      setCart(data.cart.items || []);
-    } catch (error: any) {
+      const response = await fetch(`${API_URL}/api/cart/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'auth-token': token
+        },
+        body: JSON.stringify({ productId, quantity })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCart(data.cart.items || []);
+      } else {
+        throw new Error(data.message || 'Failed to update cart');
+      }
+    } catch (error) {
       console.error('Failed to update cart:', error);
-      setError(error.message || 'Failed to update cart');
       throw error;
     } finally {
       setIsLoading(false);
@@ -129,12 +142,19 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     try {
       setIsLoading(true);
-      setError(null);
-      await apiService.clearCart();
-      setCart([]);
-    } catch (error: any) {
+      const response = await fetch(`${API_URL}/api/cart/clear`, {
+        method: 'POST',
+        headers: { 'auth-token': token }
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCart([]);
+      } else {
+        throw new Error(data.message || 'Failed to clear cart');
+      }
+    } catch (error) {
       console.error('Failed to clear cart:', error);
-      setError(error.message || 'Failed to clear cart');
       throw error;
     } finally {
       setIsLoading(false);
@@ -157,9 +177,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     clearCart,
     getCartItemCount,
     getCartTotal,
-    isLoading,
-    error,
-    refreshCart
+    isLoading
   };
 
   return (

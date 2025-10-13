@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiService } from '@/api/api';
 
 interface WishlistItem {
   productId: string;
@@ -21,8 +20,6 @@ interface WishlistContextType {
   getWishlistCount: () => number;
   clearWishlist: () => void;
   isLoading: boolean;
-  error: string | null;
-  refreshWishlist: () => Promise<void>;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -42,61 +39,47 @@ interface WishlistProviderProps {
 export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) => {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load wishlist from backend on mount
+  // Load wishlist from localStorage on mount
   useEffect(() => {
-    loadWishlist();
+    const savedWishlist = localStorage.getItem('wishlist');
+    if (savedWishlist) {
+      try {
+        const parsedWishlist = JSON.parse(savedWishlist);
+        // Convert date strings back to Date objects
+        const wishlistWithDates = parsedWishlist.map((item: any) => ({
+          ...item,
+          addedAt: new Date(item.addedAt)
+        }));
+        setWishlist(wishlistWithDates);
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+        setWishlist([]);
+      }
+    }
   }, []);
 
-  const loadWishlist = async () => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      setWishlist([]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await apiService.getWishlist();
-      const wishlistItems = data.items.map((item: any) => ({
-        productId: item.product._id,
-        product: item.product,
-        addedAt: new Date(item.createdAt)
-      }));
-      setWishlist(wishlistItems);
-    } catch (error: any) {
-      console.error('Failed to load wishlist:', error);
-      setError(error.message || 'Failed to load wishlist');
-      setWishlist([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const refreshWishlist = async () => {
-    await loadWishlist();
-  };
+  // Save wishlist to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
 
   const addToWishlist = async (productId: string, product?: WishlistItem['product']) => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      throw new Error('Please login to add items to wishlist');
-    }
-
     setIsLoading(true);
     try {
-      setError(null);
-      const data = await apiService.addToWishlist(productId);
+      // Check if already in wishlist
+      if (isInWishlist(productId)) {
+        throw new Error('Product is already in your wishlist');
+      }
+
       const newItem: WishlistItem = {
         productId,
-        product: product || data.item.product,
+        product,
         addedAt: new Date()
       };
+
       setWishlist(prev => [...prev, newItem]);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add item to wishlist');
+    } catch (error) {
       throw error;
     } finally {
       setIsLoading(false);
@@ -104,18 +87,10 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   };
 
   const removeFromWishlist = async (productId: string) => {
-    const token = localStorage.getItem('auth-token');
-    if (!token) {
-      throw new Error('Please login to remove items from wishlist');
-    }
-
     setIsLoading(true);
     try {
-      setError(null);
-      await apiService.removeFromWishlist(productId);
       setWishlist(prev => prev.filter(item => item.productId !== productId));
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove item from wishlist');
+    } catch (error) {
       throw error;
     } finally {
       setIsLoading(false);
@@ -141,9 +116,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     isInWishlist,
     getWishlistCount,
     clearWishlist,
-    isLoading,
-    error,
-    refreshWishlist
+    isLoading
   };
 
   return (

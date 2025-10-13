@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { NavLink, useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
   User,
@@ -8,47 +8,22 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Store,
-  Users,
-  MessageSquare
+  Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/auth/AuthContext"; // 👈 example auth context hook
 
-// Seller nav
-const sellerNavigation = [
-  { name: "Home", href: "home", icon: LayoutDashboard },
-  { name: "Dashboard", href: "dashboard", icon: LayoutDashboard },
+const navigation = [
+  { name: "Dashboard", href: "dashboard", icon: LayoutDashboard }, // relative index route
   { name: "About", href: "about", icon: User },
   { name: "Services", href: "services", icon: Package },
-  { name: "Chats", href: "chats", icon: MessageSquare },
-  { name: "Analytics", href: "analytics", icon: BarChart3 },
-  { name: "Settings", href: "settings", icon: Settings },
-];
-
-// Customer nav
-const customerNavigation = [
-  { name: "Home", href: "home", icon: LayoutDashboard },
-  { name: "Dashboard", href: "dashboard", icon: LayoutDashboard },
-  { name: "About", href: "about", icon: User },
-  { name: "Suppliers", href: "suppliers", icon: Users },
   { name: "Analytics", href: "analytics", icon: BarChart3 },
   { name: "Settings", href: "settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { id } = useParams();
-  const { user } = useAuth(); // 👈 assumes { user: { role: "Seller" | "Customer", name, ... } }
-
-  // Pick correct nav + base path
-  const { basePath, navigation } = useMemo(() => {
-    if (user?.role === "Customer") {
-      return { basePath: `/customer/${id}`, navigation: customerNavigation };
-    }
-    return { basePath: `/seller/${id}`, navigation: sellerNavigation };
-  }, [user, id]);
+  const { id } = useParams(); // ✅ grab seller ID from URL
 
   return (
     <div
@@ -60,15 +35,13 @@ export function Sidebar() {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
-          <Link to="/" className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <Store className="w-5 h-5 text-primary-foreground" />
-          </Link>
+          </div>
           {!collapsed && (
             <div>
-              <h1 className="font-semibold text-foreground">Artist Bazaar</h1>
-              <p className="text-xs text-muted-foreground">
-                {user?.role ?? "Dashboard"}
-              </p>
+              <h1 className="font-semibold text-foreground">SellerHub</h1>
+              <p className="text-xs text-muted-foreground">Business Dashboard</p>
             </div>
           )}
         </div>
@@ -88,7 +61,7 @@ export function Sidebar() {
           {navigation.map((item) => (
             <li key={item.name}>
               <NavLink
-                to={item.href ? `${basePath}/${item.href}` : basePath}
+                to={item.href ? `/seller/${id}/${item.href}` : `/seller/${id}`}
                 end={item.href === ""}
                 className={({ isActive }) =>
                   cn(
@@ -115,12 +88,10 @@ export function Sidebar() {
           <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
             <User className="h-4 w-4 text-muted-foreground" />
           </div>
-          {!collapsed && user && (
+          {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {user.name || "User"}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">{user.role}</p>
+              <p className="text-sm font-medium text-foreground truncate">John Seller</p>
+              <p className="text-xs text-muted-foreground truncate">Premium Account</p>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate, NavLink, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { Menu, X, ShoppingCart, LogOut, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,6 @@ import {
 // import Avatar from 'boring-avatars';
 import logo from '../assets/logo-temp.png';
 import CartSidebar from '@/components/CartSidebar';
-import WishlistDrawer from '@/components/WishlistDrawer';
-
 import { useCart } from '@/context/CartContext/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAlert } from '@/context/alert/AlertContext';
@@ -34,15 +32,13 @@ interface NavLink {
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-
   const [user, setUser] = useState<User | null>(null);
 
   const { getCartItemCount } = useCart();
   const { getWishlistCount } = useWishlist();
   const { showSuccess } = useAlert();
   const location = useLocation();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const currentHash = location.hash || '#home';
 
   // Check auth
@@ -75,16 +71,9 @@ const Navbar: React.FC = () => {
   const navLinks: NavLink[] = [
     { name: 'Home', path: '/', isHash: true },
     { name: 'Products', path: '/products' },
-    { name: 'Artisans', path: '/artisans' },
     { name: 'About', path: '/about', isHash: true },
     ...(user ? [{ name: 'Chat', path: '/chat' }] : []),
   ];
-   // inside your component
-    const { id } = useParams();
-    const navigate = useNavigate();
-    
-    // const sellerId = getSellerId();
-    const sellerId = localStorage.getItem("sellerId");
 
   const renderNavLinks = (isMobile = false) =>
     navLinks.map((link) =>
@@ -146,8 +135,7 @@ const Navbar: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="relative text-beige hover:text-muddy-brown"
-                onClick={() => setIsWishlistOpen(true)}
-                aria-label="Open wishlist"
+                onClick={() => navigate('/products')}
               >
                 <Heart className="h-5 w-5" />
                 {getWishlistCount() > 0 && (
@@ -156,7 +144,6 @@ const Navbar: React.FC = () => {
                   </Badge>
                 )}
               </Button>
-
               {/* Cart */}
               <Button
                 variant="ghost"
@@ -190,15 +177,6 @@ const Navbar: React.FC = () => {
                       Home
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                                <Link
-                                  to={  `/seller/${sellerId}`} // redirect to seller/:id or login
-                                  className="flex items-center w-full"
-                                >
-                                  <User className="w-4 h-4 mr-2" />
-                                  {sellerId ? "Profile" : "Login"}
-                                </Link>
-                              </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <button onClick={handleLogout} className="flex items-center w-full">
@@ -241,16 +219,15 @@ const Navbar: React.FC = () => {
               onClick={handleLogout}
               className="block text-sm py-1 font-medium text-beige hover:text-muddy-brown"
             >
-              {/* <LogOut className="w-4 h-4 inline mr-1" /> */}
-              {/* Logout */}
+              <LogOut className="w-4 h-4 inline mr-1" />
+              Logout
             </button>
           )}
         </div>
       )}
 
-      {/* Drawers */}
+      {/* Cart Sidebar */}
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
     </header>
   );
 };

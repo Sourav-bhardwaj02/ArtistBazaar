@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAlert } from "@/context/alert/AlertContext";
-import { useNavigate } from "react-router-dom";
 
 interface ProductCardProps {
   id?: string;
@@ -25,34 +24,19 @@ interface ProductCardProps {
 }
 
 export function ProductCard({
-  id = '',
+  id,
   name,
   price,
   artisan,
   location,
   story,
-  image,
   description,
   materials = ["Clay", "Natural Glazes"],
   rating = 4,
   reviews = 23,
-  tags = [],
+  tags = [], // ✅ default empty array
   onClick,
 }: ProductCardProps) {
-  const navigate = useNavigate();
-  
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Only navigate if the click wasn't on a button or link
-    if (e.target instanceof Element && (e.target.closest('button') || e.target.closest('a'))) {
-      return;
-    }
-    
-    if (onClick) {
-      onClick();
-    } else if (id) {
-      navigate(`/products/${id}`);
-    }
-  };
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -110,26 +94,12 @@ export function ProductCard({
 
   return (
     <Card
-      className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full flex flex-col"
-      onClick={handleCardClick}
+      className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+      onClick={onClick}
     >
       {/* Image Section */}
       <div className="aspect-square bg-gradient-subtle rounded-t-lg flex items-center justify-center text-6xl relative overflow-hidden">
-        {image ? (
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to emoji if image fails to load
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-        ) : null}
-        <div className={`w-full h-full flex items-center justify-center ${image ? 'hidden' : ''}`}>
-          🏺
-        </div>
+        🏺
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
           <Button
             variant="secondary"

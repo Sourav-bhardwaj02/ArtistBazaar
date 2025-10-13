@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,6 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
 import craftsShowcase from "@/assets/crafts-showcase.jpg";
-import { useProductContext } from "@/context/ProductContext/ProductContext";
-import { apiService } from "@/api/api";
 
 // Define types for products and artisans
 interface Product {
@@ -21,15 +19,14 @@ interface Product {
   artisan: string;
   location: string;
   story: string;
-  description?: string;
-  materials?: string[];
-  rating?: number;
-  reviews?: number;
-  image?: string;
+  description: string;
+  materials: string[];
+  rating: number;
+  reviews: number;
 }
 
 interface Artisan {
-  id: string | number;
+  id: number;
   name: string;
   craft: string;
   location: string;
@@ -40,15 +37,203 @@ interface Artisan {
   description: string;
 }
 
+const featuredProducts: Product[] = [
+  {
+    name: "Handmade Pottery Bowl",
+    price: 800,
+    artisan: "Asha Devi",
+    location: "Jaipur",
+    story: "Traditional blue pottery technique passed down through generations",
+    description: "Beautiful handcrafted pottery bowl made using traditional Jaipur blue pottery techniques. Each piece is unique and represents centuries of artistic heritage.",
+    materials: ["Blue Clay", "Natural Glazes", "Copper Oxide"],
+    rating: 5,
+    reviews: 34,
+  },
+  {
+    name: "Bamboo Basket Set",
+    price: 500,
+    artisan: "Ramesh Kumar",
+    location: "Assam",
+    story: "Sustainable bamboo weaving supporting local forest communities",
+    description: "Eco-friendly bamboo basket set perfect for storage and organization. Handwoven by skilled artisans using sustainable bamboo harvesting practices.",
+    materials: ["Bamboo", "Natural Dyes", "Cotton Binding"],
+    rating: 4,
+    reviews: 18,
+  },
+  {
+    name: "Silver Jhumka Earrings",
+    price: 1200,
+    artisan: "Meera Sharma",
+    location: "Udaipur",
+    story: "Intricate silver work inspired by Rajasthani heritage",
+    description: "Exquisite silver jhumka earrings featuring traditional Rajasthani motifs. Each piece is carefully crafted by master silversmiths.",
+    materials: ["Sterling Silver", "Traditional Gemstones", "Gold Plating"],
+    rating: 5,
+    reviews: 27,
+  },
+ 
+  {
+    name: "Madhubani Painting",
+    price: 2500,
+    artisan: "Sita Devi",
+    location: "Madhubani, Bihar",
+    story: "Hand-painted masterpiece inspired by ancient Mithila traditions",
+    description: "Authentic Madhubani painting featuring natural dyes and intricate folk motifs, passed down through generations of women artists.",
+    materials: ["Handmade Paper", "Natural Dyes", "Bamboo Brushes"],
+    rating: 5,
+    reviews: 42,
+  },
+  {
+    name: "Pashmina Shawl",
+    price: 3500,
+    artisan: "Bilal Ahmed",
+    location: "Srinagar, Kashmir",
+    story: "Handwoven luxury crafted from the finest Himalayan wool",
+    description: "Elegant Pashmina shawl woven by Kashmiri artisans, combining warmth and beauty with timeless embroidery designs.",
+    materials: ["Pashmina Wool", "Natural Dyes", "Hand Embroidery"],
+    rating: 5,
+    reviews: 67,
+  },
+  {
+    name: "Terracotta Horse Figurine",
+    price: 900,
+    artisan: "Karthik Subramanian",
+    location: "Bankura, West Bengal",
+    story: "Iconic terracotta craft symbolizing prosperity and heritage",
+    description: "Traditional Bankura horse crafted from natural terracotta clay, showcasing intricate carving and detailing.",
+    materials: ["Terracotta Clay", "Natural Red Oxide", "Hand Carving Tools"],
+    rating: 4,
+    reviews: 23,
+  },
+  {
+    name: "Kathakali Wooden Mask",
+    price: 1800,
+    artisan: "Anand Nair",
+    location: "Kerala",
+    story: "Hand-painted wooden mask inspired by classical Kathakali dance",
+    description: "Colorful wooden mask showcasing expressive facial features of Kathakali performers, crafted by Kerala artisans.",
+    materials: ["Wood", "Natural Paints", "Coconut Shell Brushes"],
+    rating: 4,
+    reviews: 31,
+  },
+  {
+    name: "Bidriware Jewelry Box",
+    price: 2200,
+    artisan: "Salim Khan",
+    location: "Bidar, Karnataka",
+    story: "Rare craft of inlaying silver into blackened alloy",
+    description: "Elegant Bidriware jewelry box with intricate silver inlay patterns, representing the centuries-old Deccan tradition.",
+    materials: ["Zinc-Copper Alloy", "Pure Silver", "Natural Oxidizing Agents"],
+    rating: 5,
+    reviews: 40,
+  },
+];
+
+const artisans: Artisan[] = [
+  {
+    id: 1,
+    name: "Ravi Kumar",
+    craft: "Pottery",
+    location: "Jaipur, Rajasthan",
+    rating: 4.8,
+    reviews: 124,
+    specialties: ["Traditional Pottery", "Blue Pottery", "Terracotta"],
+    experience: "15+ years",
+    description: "Master potter specializing in traditional Rajasthani blue pottery techniques passed down through generations.",
+  },
+  {
+    id: 2,
+    name: "Meera Devi",
+    craft: "Textiles",
+    location: "Varanasi, UP",
+    rating: 4.9,
+    reviews: 89,
+    specialties: ["Silk Weaving", "Banarasi Sarees", "Traditional Patterns"],
+    experience: "20+ years",
+    description:
+      "Expert weaver creating exquisite Banarasi silk sarees with intricate gold and silver thread work.",
+  },
+  {
+    id: 3,
+    name: "Arjun Singh",
+    craft: "Woodcarving",
+    location: "Udaipur, Rajasthan",
+    rating: 4.7,
+    reviews: 156,
+    specialties: ["Furniture", "Decorative Items", "Temple Art"],
+    experience: "12+ years",
+    description:
+      "Skilled woodcarver creating beautiful furniture and decorative pieces with traditional Rajasthani motifs.",
+  },
+  {
+    id: 4,
+    name: "Sita Devi",
+    craft: "Madhubani Painting",
+    location: "Madhubani, Bihar",
+    rating: 5.0,
+    reviews: 142,
+    specialties: ["Mithila Folk Art", "Natural Dye Painting", "Cultural Storytelling"],
+    experience: "25+ years",
+    description:
+      "Renowned artist preserving the heritage of Madhubani painting using natural dyes and handmade paper.",
+  },
+  {
+    id: 5,
+    name: "Bilal Ahmed",
+    craft: "Pashmina Weaving",
+    location: "Srinagar, Kashmir",
+    rating: 4.9,
+    reviews: 110,
+    specialties: ["Pashmina Shawls", "Hand Embroidery", "Traditional Kashmiri Designs"],
+    experience: "18+ years",
+    description:
+      "Master craftsman weaving luxurious Pashmina shawls with intricate Kashmiri embroidery.",
+  },
+  {
+    id: 6,
+    name: "Karthik Subramanian",
+    craft: "Terracotta Sculpting",
+    location: "Bankura, West Bengal",
+    rating: 4.6,
+    reviews: 95,
+    specialties: ["Terracotta Figurines", "Bankura Horses", "Clay Sculptures"],
+    experience: "14+ years",
+    description:
+      "Terracotta artisan known for iconic Bankura horses and temple-inspired clay figurines.",
+  },
+  {
+    id: 7,
+    name: "Anand Nair",
+    craft: "Wooden Mask Making",
+    location: "Kerala",
+    rating: 4.7,
+    reviews: 77,
+    specialties: ["Kathakali Masks", "Wood Carving", "Hand Painting"],
+    experience: "16+ years",
+    description:
+      "Traditional craftsman creating expressive wooden Kathakali masks painted with vibrant natural pigments.",
+  },
+  {
+    id: 8,
+    name: "Salim Khan",
+    craft: "Bidriware",
+    location: "Bidar, Karnataka",
+    rating: 5.0,
+    reviews: 134,
+    specialties: ["Silver Inlay Work", "Jewelry Boxes", "Deccan Art"],
+    experience: "22+ years",
+    description:
+      "Expert artisan specializing in Bidriware with stunning silver inlay designs on dark metal alloys.",
+  },
+
+];
+
 const Index = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const artisanScrollRef = useRef<HTMLDivElement>(null);
   const productScrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { products, fetchProducts, loading: productsLoading } = useProductContext();
-  const [artisans, setArtisans] = useState<Artisan[]>([]);
-  const [artisansLoading, setArtisansLoading] = useState(false);
 
   // Smooth scroll handler
   const scroll = (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
@@ -70,41 +255,8 @@ const Index = () => {
     setSelectedProduct(null);
   };
 
-  // Fetch featured data on mount
-  useEffect(() => {
-    // Fetch products (first page) and artisans list (limited)
-    fetchProducts(1);
-
-    const loadArtisans = async () => {
-      setArtisansLoading(true);
-      try {
-        const result: any = await apiService.getSellersList({ page: "1", limit: "12" });
-        const sellerList: any[] = result?.sellers || [];
-        const mapped: Artisan[] = sellerList.map((s: any) => ({
-          id: s._id,
-          name: s.name || s.email || "Artisan",
-          craft: s.role || "Artisan",
-          location: s.location || "Local",
-          rating: 4.8,
-          reviews: 24,
-          specialties: Array.isArray(s.specialties) ? s.specialties : [],
-          experience: s.experience || "",
-          description: s.bio || "Talented artisan creating beautiful handmade crafts with traditional techniques.",
-        }));
-        setArtisans(mapped);
-      } catch (err) {
-        console.error("Failed to load artisans", err);
-        setArtisans([]);
-      } finally {
-        setArtisansLoading(false);
-      }
-    };
-
-    loadArtisans();
-  }, []);
-
   return (
-    <div className="min-h-screen w-full bg-gradient-subtle">
+    <div className="min-h-screen w-full bg-gradient-subtles">
       <Navbar />
       {/* Hero Section */}
       <section id="home" className="relative overflow-hidden bg-gradient-hero">
@@ -173,44 +325,44 @@ const Index = () => {
           className="flex overflow-x-auto gap-8 py-4 px-2 scroll-smooth snap-x snap-mandatory "
           style={{ scrollPadding: "0.5rem" }}
         >
-          {(artisansLoading ? Array.from({ length: 6 }) : artisans).map((artisan, idx) => (
+          {artisans.map((artisan) => (
             <Card
-              key={(artisan as Artisan)?.id ?? idx}
+              key={artisan.id}
               className="flex-none w-80 overflow-hidden shadow-elegant hover:shadow-warm transition spring group hover:-translate-y-1 snap-center"
             >
               <div className="aspect-square bg-gradient-warm/10 flex items-center justify-center p-8">
                 <img
                   src={craftsShowcase}
-                  alt={`${(artisan as Artisan)?.name || "Artisan"}'s crafts`}
+                  alt={`${artisan.name}'s crafts`}
                   className="w-full h-full object-cover rounded-lg shadow-elegant group-hover:scale-105 transition spring"
                 />
               </div>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-xl">{(artisan as Artisan)?.name || ""}</CardTitle>
-                    <p className="text-primary font-semibold">{(artisan as Artisan)?.craft || ""}</p>
+                    <CardTitle className="text-xl">{artisan.name}</CardTitle>
+                    <p className="text-primary font-semibold">{artisan.craft}</p>
                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{(artisan as Artisan)?.rating ?? 4.8}</span>
-                    <span className="text-muted-foreground">({(artisan as Artisan)?.reviews ?? 24})</span>
+                    <span className="font-medium">{artisan.rating}</span>
+                    <span className="text-muted-foreground">({artisan.reviews})</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <MapPin className="h-4 w-4" />
-                  <span className="text-sm">{(artisan as Artisan)?.location || ""}</span>
+                  <span className="text-sm">{artisan.location}</span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground line-clamp-2">{(artisan as Artisan)?.description || ""}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{artisan.description}</p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">Experience:</span>
-                    <span className="text-primary">{(artisan as Artisan)?.experience || ""}</span>
+                    <span className="text-primary">{artisan.experience}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {(artisan as Artisan)?.specialties?.map((specialty, index) => (
+                    {artisan.specialties.map((specialty, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         {specialty}
                       </Badge>
@@ -218,10 +370,10 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" className="flex-1" onClick={() => navigate(`/profile/${(artisan as Artisan)?.id}`)}>
+                  <Button size="sm" className="flex-1" onClick={() => navigate(`/profile/${artisan.id}`)}>
                     View Profile
                   </Button>
-                  <Button size="sm" className="flex-1" onClick={() => navigate(`/chat/${(artisan as Artisan)?.id}`)}>
+                  <Button size="sm" className="flex-1" onClick={() => navigate(`/chat/${artisan.id}`)}>
                     <MessageCircle className="h-4 w-4 mr-1" />
                     Chat
                   </Button>
@@ -243,7 +395,7 @@ const Index = () => {
 
         {/* Browse all */}
         <div className="text-center mt-4 mb-7">
-          <Link to="/artisans" className="text-blue-600 underline">Browse all Artisan →</Link>
+          <Link to="/artists" className="text-blue-600 underline">Browse all Artisan →</Link>
         </div>
       </div>
 
@@ -264,37 +416,14 @@ const Index = () => {
             className="flex overflow-x-auto gap-8 py-4 px-2 scroll-smooth snap-x snap-mandatory"
             style={{ scrollPadding: "1rem" }}
           >
-            {(productsLoading ? Array.from({ length: 8 }) : products.slice(0, 12)).map((p: any, index: number) => {
-              const image = Array.isArray(p?.images) && p.images.length
-                ? p.images[0]
-                : p?.image || (Array.isArray(p?.imagesData) && p.imagesData[0]?.url) || undefined;
-              const productForCard = {
-                id: p?._id,
-                name: p?.name || "Handcrafted Item",
-                price: p?.price || 0,
-                artisan: p?.artisan || "Local Artisan",
-                location: p?.location || p?.category || "",
-                story: p?.description || "",
-                image,
-                tags: p?.tags || [],
-              };
-              const productForModal: Product = {
-                name: productForCard.name,
-                price: productForCard.price,
-                artisan: productForCard.artisan,
-                location: productForCard.location,
-                story: productForCard.story,
-                image: productForCard.image,
-              };
-              return (
-                <div key={p?._id || index} className="flex-none w-80 snap-center">
-                  <ProductCard
-                    {...productForCard}
-                    onClick={() => handleProductClick(productForModal)}
-                  />
-                </div>
-              );
-            })}
+            {featuredProducts.map((product, index) => (
+              <div
+                key={index}
+                className="flex-none w-80 snap-center"
+              >
+                <ProductCard {...product} onClick={() => handleProductClick(product)} />
+              </div>
+            ))}
           </div>
 
           {/* Floating scroll buttons for products */}

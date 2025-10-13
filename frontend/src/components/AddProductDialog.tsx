@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -16,15 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiService } from "@/api/api";
 
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (product: any) => void;
 }
 
-export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDialogProps) {
+export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -35,8 +31,6 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
     tags: "",
   });
   const [images, setImages] = useState<File[]>([]);
-  const [imageUrl, setImageUrl] = useState("");
-  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload');
   const { toast } = useToast();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,55 +64,34 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
       return;
     }
 
-    // Validate image input based on selected mode (XOR)
-    if (imageMode === 'upload' && images.length === 0) {
-      toast({ title: "No images uploaded", description: "Please upload at least one image or switch to URL mode.", variant: "destructive" });
-      return;
-    }
-    if (imageMode === 'url') {
-      const urls = imageUrl.split(',').map(u => u.trim()).filter(Boolean);
-      const valid = urls.filter(u => /^https?:\/\//i.test(u));
-      if (valid.length === 0) {
-        toast({ title: "No image URLs", description: "Please enter at least one valid HTTPS image URL or switch to Upload mode.", variant: "destructive" });
-        return;
-      }
-    }
-
     try {
-      // 1) Upload images to backend (Cloudinary) to get URLs
-      let imageUrls: string[] = [];
-      if (imageMode === 'upload' && images.length > 0) {
-        const uploadRes = await apiService.uploadImages(images as any);
-        const uploaded = (uploadRes as any).images || [];
-        imageUrls = uploaded.map((img: any) => img.url).filter(Boolean);
-      }
-
-      // 1b) Parse optional image URL(s) input (comma-separated allowed)
-      const manualUrls = (imageMode === 'url' ? imageUrl : "")
-        .split(',')
-        .map((u) => u.trim())
-        .filter(Boolean)
-        .filter((u) => /^https?:\/\//i.test(u));
-      imageUrls = [...imageUrls, ...manualUrls];
-
-      // 2) Build payload for product creation
+      const API_URL = import.meta.env.VITE_URL as string;
+      const authToken = localStorage.getItem("auth-token") || "";
       const payload = {
         ...formData,
         price: Number(formData.price),
         stock: formData.stock ? Number(formData.stock) : 0,
         tags: formData.tags ? formData.tags.split(',').map(s => s.trim()).filter(Boolean) : [],
-        image: imageUrls[0], // associate primary image explicitly
-        images: imageUrls, // backend createSchema expects array of strings
+        images: images.map(f => f.name),
       } as any;
 
-      const result = await apiService.createProduct(payload);
+      const resp = await fetch(`${API_URL}/api/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": authToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.message || "Failed to add product");
 
       toast({
         title: "Product added successfully!",
         description: `${formData.name} has been added to your catalog`,
       });
 
-      // inside handleSubmit success
       setFormData({
         name: "",
         description: "",
@@ -126,16 +99,9 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
         price: "",
         sku: "",
         stock: "",
-        tags: "", // keep tags so form stays stable
       });
       setImages([]);
-      setImageUrl("");
-      setImageMode('upload');
       onOpenChange(false);
-
-      // Notify parent to refresh data
-      const createdProduct = (result as any).product ?? result;
-      if (onSuccess) onSuccess(createdProduct);
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed", variant: "destructive" });
     }
@@ -173,10 +139,12 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Painting">Painting</SelectItem>
-                  <SelectItem value="Sculpture">Sculpture</SelectItem>
-                  <SelectItem value="Craft">Craft</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="industrial">Industrial Equipment</SelectItem>
+                  <SelectItem value="automation">Automation Systems</SelectItem>
+                  <SelectItem value="safety">Safety Equipment</SelectItem>
+                  <SelectItem value="electronics">Electronics</SelectItem>
+                  <SelectItem value="materials">Raw Materials</SelectItem>
+                  <SelectItem value="tools">Tools & Hardware</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -228,24 +196,8 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
 
           <div className="space-y-4">
             <Label>Product Images</Label>
-
-            {/* Choose image input mode */}
-            <RadioGroup
-              value={imageMode}
-              onValueChange={(v) => setImageMode((v as 'upload' | 'url'))}
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="upload" id="mode-upload" />
-                <Label htmlFor="mode-upload">Upload</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="url" id="mode-url" />
-                <Label htmlFor="mode-url">Image URL</Label>
-              </div>
-            </RadioGroup>
             
-            <div className={cn("border-2 border-dashed rounded-lg p-6", imageMode === 'url' ? 'opacity-50 pointer-events-none' : 'border-border') }>
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
               <div className="text-center">
                 <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <div className="space-y-2">
@@ -271,7 +223,7 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
               </div>
             </div>
 
-            {imageMode === 'upload' && images.length > 0 && (
+            {images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {images.map((image, index) => (
                   <div key={index} className="relative group">
@@ -291,21 +243,6 @@ export function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDi
                 ))}
               </div>
             )}
-
-            {/* Optional: Image URL(s) */}
-            <div className="space-y-2">
-              <Label htmlFor="image-url">Image URL(s) (optional)</Label>
-              <Input
-                id="image-url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://... , https://... (you can paste multiple URLs separated by commas)"
-                disabled={imageMode !== 'url'}
-              />
-              <p className="text-xs text-muted-foreground">
-                Paste one or more HTTPS image URLs (comma-separated). These will be used along with any uploaded images.
-              </p>
-            </div>
           </div>
 
           <DialogFooter>

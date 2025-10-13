@@ -172,7 +172,7 @@ export default function Products() {
                   artisan={p.artisan || "Local Artisan"}
                   location={p.location || p.category}
                   story={p.description}
-                  image={p.image || p.images?.[0] || p.imagesData?.[0]?.url} 
+                  images={p.images}
                   tags={p.tags}
                 />
               ))}

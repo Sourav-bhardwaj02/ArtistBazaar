@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/context/auth/AuthContext";
-import { useCart } from "@/context/CartContext/CartContext";
-import { useWishlist } from "@/context/WishlistContext";
 import {
   ShoppingCart,
   Package,
@@ -20,64 +17,60 @@ import {
 } from "lucide-react";
 
 export default function CustomerDashboard() {
-  const { user } = useAuth();
-  const { getCartItemCount, getCartTotal } = useCart();
-  const { getWishlistCount } = useWishlist();
-
   const recentOrders = [
-    { id: "ORD-001", product: "Hand-Painted Vase", supplier: "Priya Sharma", status: "delivered", amount: "₹1,200" },
-    { id: "ORD-002", product: "Silver Earrings", supplier: "Anita Desai", status: "pending", amount: "₹2,500" },
-    { id: "ORD-003", product: "Cotton Saree", supplier: "Lakshmi Nair", status: "shipped", amount: "₹3,500" },
+    { id: "ORD-001", product: "Industrial Pumps", supplier: "TechFlow Ltd", status: "delivered", amount: "₹12,500" },
+    { id: "ORD-002", product: "Steel Components", supplier: "MetalWorks Inc", status: "pending", amount: "₹8,750" },
+    { id: "ORD-003", product: "Electronics Parts", supplier: "CircuitMax", status: "shipped", amount: "₹3,200" },
   ];
 
   const topSuppliers = [
-    { name: "Priya Sharma", orders: 24, rating: 4.8, location: "Jaipur" },
-    { name: "Anita Desai", orders: 18, rating: 4.6, location: "Mumbai" },
-    { name: "Lakshmi Nair", orders: 12, rating: 4.9, location: "Varanasi" },
+    { name: "TechFlow Ltd", orders: 24, rating: 4.8, location: "Germany" },
+    { name: "MetalWorks Inc", orders: 18, rating: 4.6, location: "USA" },
+    { name: "CircuitMax", orders: 12, rating: 4.9, location: "Japan" },
   ];
 
   return (
-    
-      <div className="space-y-6 flex-1 p-6">
+    <Layout>
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome back, {user?.name}!</h1>
-            <p className="text-muted-foreground">Here's your shopping overview and favorite artisans.</p>
+            <h1 className="text-3xl font-bold text-foreground">Customer Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's your procurement overview.</p>
           </div>
           <Button className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary">
             <Plus className="mr-2 h-4 w-4" />
-            Browse Products
+            New RFQ
           </Button>
         </div>
 
         {/* Metrics Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricsCard
-            title="Cart Items"
-            value={getCartItemCount().toString()}
-            description="Items in your cart"
+            title="Total Orders"
+            value="142"
+            description="Active procurement orders"
             icon={ShoppingCart}
             trend={{ value: 12, isPositive: true }}
           />
           <MetricsCard
-            title="Wishlist Items"
-            value={getWishlistCount().toString()}
-            description="Saved for later"
+            title="Products Sourced"
+            value="1,247"
+            description="Unique products sourced"
             icon={Package}
             trend={{ value: 8, isPositive: true }}
           />
           <MetricsCard
-            title="Favorite Artisans"
-            value="12"
-            description="Artisans you follow"
+            title="Active Suppliers"
+            value="89"
+            description="Trusted supplier partners"
             icon={Building2}
             trend={{ value: 5, isPositive: true }}
           />
           <MetricsCard
-            title="Cart Total"
-            value={`₹${getCartTotal().toLocaleString()}`}
-            description="Current cart value"
+            title="Cost Savings"
+            value="₹24.5K"
+            description="This quarter savings"
             icon={TrendingUp}
             trend={{ value: 18, isPositive: true }}
           />
@@ -88,7 +81,7 @@ export default function CustomerDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Orders</CardTitle>
-              <CardDescription>Your latest purchases from artisans</CardDescription>
+              <CardDescription>Your latest procurement activities</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentOrders.map((order) => (
@@ -126,11 +119,11 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Top Artisans */}
+          {/* Top Suppliers */}
           <Card>
             <CardHeader>
-              <CardTitle>Favorite Artisans</CardTitle>
-              <CardDescription>Your most trusted artisan partners</CardDescription>
+              <CardTitle>Top Suppliers</CardTitle>
+              <CardDescription>Your most reliable supplier partners</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {topSuppliers.map((supplier, index) => (
@@ -155,7 +148,7 @@ export default function CustomerDashboard() {
               ))}
               <Button variant="outline" className="w-full mt-4">
                 <Building2 className="mr-2 h-4 w-4" />
-                View All Artisans
+                View All Suppliers
               </Button>
             </CardContent>
           </Card>
@@ -165,30 +158,30 @@ export default function CustomerDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Explore and discover amazing handmade products</CardDescription>
+            <CardDescription>Streamline your procurement workflow</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-3">
-              <Button variant="outline" className="h-20 flex-col" onClick={() => window.location.href = '/products'}>
+              <Button variant="outline" className="h-20 flex-col">
                 <Package className="h-6 w-6 mb-2" />
                 Browse Products
               </Button>
               <Button 
                 variant="outline" 
                 className="h-20 flex-col"
-                onClick={() => window.location.href = '/artisans'}
+                onClick={() => window.location.href = '/Customer/suppliers'}
               >
                 <Building2 className="h-6 w-6 mb-2" />
-                Find Artisans
+                Find Suppliers
               </Button>
-              <Button variant="outline" className="h-20 flex-col" onClick={() => window.location.href = '/chat'}>
+              <Button variant="outline" className="h-20 flex-col">
                 <Plus className="h-6 w-6 mb-2" />
-                Chat with Artisans
+                Create RFQ
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
-    
+    </Layout>
   );
 }

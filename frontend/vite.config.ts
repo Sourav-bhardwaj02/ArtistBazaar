@@ -6,16 +6,6 @@ import { componentTagger } from "superdev-tagger"; // ⬅️ named import
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:4000',
-        changeOrigin: true,
-      },
-    },
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
     host: "::",
     port: 5173,
   },
