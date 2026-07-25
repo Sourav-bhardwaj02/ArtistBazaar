@@ -328,7 +328,7 @@ Or open an issue on the GitHub repository.
 
 ## 🎯 Roadmap
 
-- [ ] Payment integration (Stripe/PayPal)
+- [ ] Payment integration (Razor pay)
 - [ ] Real-time notifications
 - [ ] Advanced analytics dashboard
 - [ ] Mobile app (React Native)
