@@ -1,0 +1,34 @@
+services:
+  backend:
+    image: shivamdevthakur/artistbazaar-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: artistbazaar-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - bazaarnet
+
+  frontend:
+    image: shivamdevthakur/artistbazaar-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: artistbazaar-frontend
+    ports:
+      - "3000:4173"
+    env_file:
+      - ./frontend/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - bazaarnet
+
+networks:
+  bazaarnet:
+    driver: bridge
