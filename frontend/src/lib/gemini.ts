@@ -1,6 +1,5 @@
 // src/utils/geminiClient.ts
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const BACKUP_API_KEY = "AIzaSyCIzgTtPZLtg_gZY4jEmS10J6wHd27VHyU";
 const PRIMARY_MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3-flash-preview";
 
 const CANDIDATE_MODELS = Array.from(
@@ -31,7 +30,7 @@ export const fetchWithRetry = async (
   maxRetries = MAX_RETRIES,
   delay = INITIAL_DELAY_MS
 ): Promise<string> => {
-  const keysToTry = [GEMINI_API_KEY, BACKUP_API_KEY].filter(Boolean) as string[];
+  const keysToTry = [GEMINI_API_KEY].filter(Boolean) as string[];
 
   for (const apiKey of keysToTry) {
     for (const model of CANDIDATE_MODELS) {
