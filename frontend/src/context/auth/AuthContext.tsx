@@ -6,8 +6,16 @@ import React, {
   ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  secureStore,
+  secureRetrieve,
+  secureRemove,
+  isTokenExpired,
+  isTokenStructureValid,
+  clearLoginFailures,
+} from "@/lib/security";
 
-// Types
+// ─── Types ────────────────────────────────────────────────────────────────────
 export type Role = "Admin" | "Seller" | "Customer" | "Services";
 
 interface User {
@@ -29,59 +37,93 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ─── Storage keys ─────────────────────────────────────────────────────────────
+const KEYS = {
+  USER: "user-data",
+  TOKEN: "auth-token",
+  REFRESH: "refresh-token",
+  ROLE: "auth-role",
+  SELLER: "sellerId",
+} as const;
+
+function clearAllAuthStorage() {
+  Object.values(KEYS).forEach((k) => secureRemove(k));
+}
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  
+
   const API_URL = import.meta.env.VITE_API_URL as string;
-  
-  // Restore from localStorage
+
+  // ── Restore session on mount ──────────────────────────────────────────────
   useEffect(() => {
-    const storedUser = localStorage.getItem("user-data");
-    const authToken = localStorage.getItem("auth-token");
-    const refreshToken = localStorage.getItem("refresh-token");
-    
+    const storedUser = secureRetrieve(KEYS.USER);
+    const authToken = secureRetrieve(KEYS.TOKEN);
+    const refreshToken = secureRetrieve(KEYS.REFRESH);
+
     if (storedUser && authToken) {
       try {
-        const parsed = JSON.parse(storedUser);
+        // Validate token structure before trusting it
+        if (!isTokenStructureValid(authToken)) {
+          throw new Error("Malformed token");
+        }
+
+        const parsed: User = JSON.parse(storedUser);
+
+        // Validate parsed user has minimum required fields
+        if (!parsed.id || !parsed.email || !parsed.role) {
+          throw new Error("Incomplete user data");
+        }
+
         setUser(parsed);
-        
-        // Check if token is expired and try to refresh
-        const tokenPayload = JSON.parse(atob(authToken.split('.')[1]));
-        const isExpired = tokenPayload.exp * 1000 < Date.now();
-        
-        if (isExpired && refreshToken) {
+
+        // Proactively refresh if expired
+        if (isTokenExpired(authToken) && refreshToken) {
           refreshAuthToken();
         }
       } catch {
-        localStorage.removeItem("user-data");
-        localStorage.removeItem("auth-token");
-        localStorage.removeItem("refresh-token");
+        // Tampered or corrupt data — wipe everything
+        clearAllAuthStorage();
+        setUser(null);
       }
     }
     setLoading(false);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Refresh token ─────────────────────────────────────────────────────────
   const refreshAuthToken = async (): Promise<boolean> => {
-    const refreshToken = localStorage.getItem("refresh-token");
+    const refreshToken = secureRetrieve(KEYS.REFRESH);
     if (!refreshToken) return false;
 
     try {
       const response = await fetch(`${API_URL}/api/auth/refresh`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("auth-token", data.authToken);
-        localStorage.setItem("refresh-token", data.refreshToken);
-        localStorage.setItem("user-data", JSON.stringify(data.user));
-        setUser(data.user);
+
+        // Validate the new token before storing
+        if (
+          !data.authToken ||
+          !isTokenStructureValid(data.authToken)
+        ) {
+          logout();
+          return false;
+        }
+
+        secureStore(KEYS.TOKEN, data.authToken);
+        secureStore(KEYS.REFRESH, data.refreshToken);
+        if (data.user) {
+          secureStore(KEYS.USER, JSON.stringify(data.user));
+          secureStore(KEYS.ROLE, data.user.role ?? "");
+          setUser(data.user);
+        }
         return true;
       } else {
         logout();
@@ -93,15 +135,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ── Login ─────────────────────────────────────────────────────────────────
   const login = (userData: User, authToken: string, refreshToken: string) => {
+    // Validate token structure before accepting
+    if (!isTokenStructureValid(authToken)) {
+      console.warn("Refused to store malformed auth token");
+      return;
+    }
+
     setUser(userData);
-    localStorage.setItem("user-data", JSON.stringify(userData));
-    localStorage.setItem("auth-token", authToken);
-    localStorage.setItem("refresh-token", refreshToken);
-    
+    secureStore(KEYS.USER, JSON.stringify(userData));
+    secureStore(KEYS.TOKEN, authToken);
+    secureStore(KEYS.REFRESH, refreshToken);
+    // ✅ Fix: store role so ProtectedRoute can read it
+    secureStore(KEYS.ROLE, userData.role);
+
+    // Reset any failed-login counters on successful auth
+    clearLoginFailures();
+
     // Navigate based on role
     if (userData.role === "Seller") {
-      localStorage.setItem("sellerId", userData.id);
+      secureStore(KEYS.SELLER, userData.id);
       navigate(`/seller/${userData.id}`);
     } else if (userData.role === "Customer") {
       navigate(`/customer/${userData.id}`);
@@ -114,12 +168,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ── Logout ────────────────────────────────────────────────────────────────
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user-data");
-    localStorage.removeItem("auth-token");
-    localStorage.removeItem("refresh-token");
-    localStorage.removeItem("sellerId");
+    clearAllAuthStorage();
     navigate("/login");
   };
 
@@ -135,6 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {

@@ -133,11 +133,18 @@ class ApiClient {
 
   // Auth specific methods
   async login(credentials: { email: string; password: string; role?: string }) {
-    return this.post("/api/auth/login", credentials);
+    return this.post<{
+      user: { id?: string; _id?: string; name?: string; email?: string; role?: string; avatar?: string };
+      authToken: string;
+      refreshToken: string;
+    }>("/api/auth/login", credentials);
   }
 
   async signup(userData: { email: string; name: string; password: string; role: string }) {
-    return this.post("/api/auth/signup", userData);
+    return this.post<{ message?: string; user?: { id?: string; name?: string; email?: string } }>(
+      "/api/auth/signup",
+      userData
+    );
   }
 
   async logout() {
