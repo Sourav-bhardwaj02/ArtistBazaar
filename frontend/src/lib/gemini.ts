@@ -1,9 +1,9 @@
 // src/utils/geminiClient.ts
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const PRIMARY_MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3-flash-preview";
+const PRIMARY_MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3.5-flash";
 
 const CANDIDATE_MODELS = Array.from(
-  new Set([PRIMARY_MODEL, "gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"])
+  new Set([PRIMARY_MODEL, "gemini-3.5-flash", "gemini-flash-latest"])
 );
 
 const MAX_RETRIES = 3;

@@ -112,3 +112,24 @@
 .animate-hero-progress {
   animation: heroProgress 3s linear forwards;
 }
+
+@keyframes bounce-dot {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-bounce-dot {
+  animation: bounce-dot 1.2s infinite ease-in-out;
+}
+
+.animate-bounce-dot-1 {
+  animation-delay: -0.32s;
+}
+
+.animate-bounce-dot-2 {
+  animation-delay: -0.16s;
+}

@@ -71,6 +71,9 @@ r.post("/images/by-url", requireAuth(), async (req, res) => {
     if (!Array.isArray(urls) || urls.length === 0) {
       return res.status(400).json({ message: "No image URLs provided" });
     }
+    if (urls.length > 10) {
+      return res.status(400).json({ message: "Cannot upload more than 10 image URLs at once" });
+    }
     const valid = urls.filter(u => typeof u === 'string' && /^https?:\/\//i.test(u));
     if (valid.length === 0) {
       return res.status(400).json({ message: "Invalid image URLs" });

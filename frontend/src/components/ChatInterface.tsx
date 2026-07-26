@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage } from "./ChatMessage";
+import { TypingIndicator } from "./TypingIndicator";
 import { Send, Clock, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchRAGContext } from "@/lib/ragContext";
@@ -174,6 +175,11 @@ export function ChatInterface() {
                 timestamp={message.timestamp}
               />
             ))}
+            {loading && (
+              <div className="my-2">
+                <TypingIndicator />
+              </div>
+            )}
           </div>
         </ScrollArea>
 

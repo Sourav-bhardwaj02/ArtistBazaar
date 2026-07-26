@@ -44,6 +44,9 @@ r.post("/conversations/start", requireAuth(), async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ message: "userId is required" });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
     const conv = await ensureConversation(req.user.id, userId);
     res.json({ id: conv._id });
   } catch (e) {
@@ -56,6 +59,10 @@ r.get("/conversations/:id/messages", requireAuth(), async (req, res) => {
   try {
     const { id } = req.params;
     const { limit = 50, before } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid conversation ID format" });
+    }
 
     const conv = await Conversation.findById(id);
     if (!conv || !conv.participants.map(String).includes(String(req.user.id))) {
@@ -83,6 +90,10 @@ r.post("/conversations/:id/messages", requireAuth(), async (req, res) => {
     const { id } = req.params;
     const { text } = req.body;
     if (!text || !text.trim()) return res.status(400).json({ message: "text is required" });
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid conversation ID format" });
+    }
 
     const conv = await Conversation.findById(id);
     if (!conv || !conv.participants.map(String).includes(String(req.user.id))) {
@@ -129,6 +140,9 @@ r.post("/conversations/:id/messages", requireAuth(), async (req, res) => {
 r.post("/conversations/:id/read", requireAuth(), async (req, res) => {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid conversation ID format" });
+    }
     const conv = await Conversation.findById(id);
     if (!conv || !conv.participants.map(String).includes(String(req.user.id))) {
       return res.status(404).json({ message: "Conversation not found" });

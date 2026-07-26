@@ -86,6 +86,31 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiting for sensitive operations
+const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // limit each IP to 30 chat requests per minute
+  message: "Too many chat requests. Please slow down.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 uploads per 15 minutes
+  message: "Upload quota exceeded. Please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 checkout attempts per 15 minutes
+  message: "Too many payment attempts, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Note: Do not apply a global limiter to avoid 429s on normal browsing.
 
 // CORS configuration
@@ -119,18 +144,25 @@ app.use("/api/products", cacheGet(30), productRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/seller", sellerRoutes);
-app.use("/api/upload", uploadRoutes);
+app.use("/api/upload", uploadLimiter, uploadRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api", wishlistRoutes);
 app.use("/api", cacheGet(30), artisanRoutes);
-app.use("/api/chats", chatsRoutes);
+app.use("/api/chats", chatLimiter, chatsRoutes);
 // Payments (Razorpay)
-app.use("/api", paymentsRouter);
+app.use("/api", paymentLimiter, paymentsRouter);
 
 // Error handling for unmatched routes
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
+if (process.env.NODE_ENV === "production") {
+  if (!process.env.MONGO_URI || process.env.MONGO_URI.includes("127.0.0.1") || process.env.MONGO_URI.includes("localhost")) {
+    console.error("FATAL: MONGO_URI is missing or not a secure production instance in production mode!");
+    process.exit(1);
+  }
+}
 
 const mongo = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/artist_bazaar";
 mongoose
